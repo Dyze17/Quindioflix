@@ -1,14 +1,25 @@
 import oracledb
 import os
 import json
+from pathlib import Path
 
-# Parámetros de conexión por defecto para Oracle XE
-DB_USER = os.environ.get("DB_USER", "DHI")
+# Carga automática del archivo .env si existe (no requiere que esté presente)
+try:
+    from dotenv import load_dotenv
+    # Busca .env en la carpeta backend/ (misma carpeta que este archivo)
+    _env_path = Path(__file__).parent / ".env"
+    load_dotenv(dotenv_path=_env_path)
+except ImportError:
+    pass  # python-dotenv es opcional; también funcionan variables de entorno del sistema
+
+# Parámetros de conexión — configurables vía .env o variables de entorno del sistema
+DB_USER     = os.environ.get("DB_USER",     "DHI")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "12345")
-DB_DSN = os.environ.get("DB_DSN", "localhost:1521/ProyectoBD2")
+DB_DSN      = os.environ.get("DB_DSN",      "localhost:1521/XEPDB1")
 
 # Configuración para que oracledb funcione en modo "Thin" (no necesita cliente de Oracle instalado)
 oracledb.defaults.fetch_lobs = False
+
 
 def get_connection():
     """
