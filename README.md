@@ -42,7 +42,7 @@ El sistema cubre los siguientes núcleos temáticos:
 
 ---
 
-## 🏗 Arquitectura
+## Arquitectura
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -61,7 +61,7 @@ El sistema cubre los siguientes núcleos temáticos:
 
 ---
 
-## 📊 Modelo Relacional
+## Modelo Relacional
 
 El esquema contiene **17 tablas** organizadas en las siguientes áreas funcionales:
 
@@ -102,7 +102,7 @@ El esquema contiene **17 tablas** organizadas en las siguientes áreas funcional
 
 ---
 
-## 📁 Scripts SQL
+## Scripts SQL
 
 Los scripts se encuentran en la carpeta `SQL/` y deben ejecutarse **en orden secuencial**:
 
@@ -199,11 +199,11 @@ SQL/07_nt5_usuarios_roles_quindioflix.sql
 - `perfil_estandar`: 3 sesiones, 8h conexión, 30 min inactividad, 5 intentos fallidos
 - `perfil_restringido`: 1 sesión, 4h conexión, 15 min inactividad, 3 intentos fallidos
 
-> ⚠️ **Nota:** El Script 07 debe ejecutarse como **DBA** (`SYS AS SYSDBA`) ya que crea usuarios, roles y perfiles Oracle.
+> **Nota:** El Script 07 debe ejecutarse como **DBA** (`SYS AS SYSDBA`) ya que crea usuarios, roles y perfiles Oracle.
 
 ---
 
-## ⚙️ Backend API
+## Backend API
 
 API RESTful construida con **FastAPI** y el driver **python-oracledb** en modo Thin (no requiere Oracle Client instalado).
 
@@ -232,7 +232,7 @@ DB_DSN=localhost:1521/ProyectoBD2
 
 ---
 
-## 🖥 Frontend Dashboard
+## Frontend Dashboard
 
 Panel de administración SPA (Single Page Application) con diseño **glassmorphism**, tipografía **Inter** y navegación por secciones.
 
@@ -255,7 +255,7 @@ Panel de administración SPA (Single Page Application) con diseño **glassmorphi
 
 ---
 
-## 📦 Requisitos Previos
+## Requisitos Previos
 
 | Requisito | Versión Mínima |
 |-----------|---------------|
@@ -273,7 +273,7 @@ oracledb
 
 ---
 
-## 🚀 Instalación y Ejecución
+## Instalación y Ejecución
 
 ### 1. Clonar el repositorio
 
@@ -346,7 +346,7 @@ Navegar a: **[http://localhost:8000](http://localhost:8000)**
 
 ---
 
-## 📂 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 QuindioFlix/
@@ -378,7 +378,7 @@ QuindioFlix/
 
 ---
 
-## 🛠 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 <table>
   <tr>
@@ -405,12 +405,12 @@ QuindioFlix/
 
 ---
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto fue desarrollado con fines **exclusivamente académicos** para la asignatura de Bases de Datos II de la Universidad del Quindío.
 
 ---
 
 <p align="center">
-  <sub>Hecho con ❤️ en Armenia, Quindío — 2025</sub>
+  <sub>Hecho en Armenia, Quindío — 2026</sub>
 </p>
