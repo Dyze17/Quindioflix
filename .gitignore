@@ -1,0 +1,34 @@
+# ============================================================
+# QuindioFlix — Archivos excluidos del control de versiones
+# ============================================================
+
+# Variables de entorno con credenciales (¡NUNCA subir al repo!)
+backend/.env
+.env
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+ENV/
+
+# IDE / editores
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Logs
+*.log
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
