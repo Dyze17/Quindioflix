@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript"/>
 </p>
 
-<h1 align="center">🎬 QuindioFlix</h1>
+<h1 align="center">QuindioFlix</h1>
 
 <p align="center">
   <strong>Plataforma de streaming — Administración de Base de Datos Oracle</strong><br/>
