@@ -25,7 +25,7 @@
 
 ---
 
-## 📋 Descripción
+## Descripción
 
 **QuindioFlix** es un sistema de gestión de base de datos para una plataforma de streaming ficticia, desarrollado como proyecto académico para la asignatura **Bases de Datos II**. El proyecto implementa un esquema relacional completo en **Oracle 21c Express Edition**, acompañado de una API RESTful en **FastAPI** y un panel de administración web moderno.
 
@@ -222,13 +222,15 @@ API RESTful construida con **FastAPI** y el driver **python-oracledb** en modo T
 
 ### Configuración de Conexión
 
-Variables de entorno (con valores por defecto):
+La API lee las credenciales desde variables de entorno o un archivo `.env` ubicado en `backend/`.
 
-```env
-DB_USER=DHI
-DB_PASSWORD=12345
-DB_DSN=localhost:1521/ProyectoBD2
-```
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `DB_USER` | Usuario Oracle del esquema | `DHI` |
+| `DB_PASSWORD` | Contraseña del usuario | `mi_clave_segura` |
+| `DB_DSN` | `host:puerto/servicio` Oracle | `localhost:1521/XEPDB1` |
+
+> El nombre del servicio (`XEPDB1` es el PDB por defecto de Oracle XE) puede variar. Consúltalo con `SHOW CON_NAME;` en SQL*Plus.
 
 ---
 
@@ -282,16 +284,71 @@ git clone https://github.com/Dyze17/Quindioflix.git
 cd Quindioflix
 ```
 
-### 2. Configurar la base de datos Oracle
+### 2. Instalar dependencias Python
 
-Ejecutar los scripts SQL **en orden** usando SQL*Plus o SQL Developer conectado como el usuario del esquema:
+```bash
+pip install -r backend/requirements.txt
+```
+
+### 3. Configurar la conexión a Oracle
+
+Copia la plantilla de configuración y edítala con tus credenciales:
+
+```bash
+# Linux / macOS
+cp backend/.env.example backend/.env
+
+# Windows (PowerShell)
+copy backend\.env.example backend\.env
+```
+
+Edita `backend/.env` y ajusta los tres valores:
+
+```env
+DB_USER=tu_usuario_oracle
+DB_PASSWORD=tu_contraseña
+DB_DSN=localhost:1521/XEPDB1
+```
+
+> **El archivo `.env` está en `.gitignore`** — nunca se sube al repositorio, así que tus credenciales permanecen privadas.
+
+**Alternativa**: también puedes exportar las variables directamente en tu terminal sin crear el `.env`:
+
+```bash
+# Windows (PowerShell)
+$env:DB_USER="tu_usuario"; $env:DB_PASSWORD="tu_clave"; $env:DB_DSN="localhost:1521/XEPDB1"
+
+# Linux / macOS
+export DB_USER=tu_usuario DB_PASSWORD=tu_clave DB_DSN=localhost:1521/XEPDB1
+```
+
+### 4. Configurar la base de datos Oracle
+
+Ejecutar los scripts SQL **en orden** usando SQL*Plus o SQL Developer conectado como el usuario del esquema (o como DBA donde se indique):
+
+> 🔑 **El Script 00 requiere privilegios DBA**:
+> Conectar como `SYS AS SYSDBA` y ejecutar para asegurar la existencia de los tablespaces del sistema:
+> ```sql
+> @SQL/00_create_tablespaces_quindioflix.sql
+> ```
+
+Luego, puedes conectar con tu usuario de desarrollo del esquema para ejecutar el grueso del proyecto:
 
 ```sql
--- Conectar al PDB o instancia correspondiente
 @SQL/01_create_tables_quindioflix.sql
 @SQL/02_insert_data_quindioflix.sql
 @SQL/03_nt1_quindioflix.sql
-@SQL/03b_tablespaces_reproducciones.sql
+```
+
+> **Script `03b_tablespaces_reproducciones.sql`**: Oracle usará OMF (Oracle Managed Files) para ubicar los datafiles automáticamente. Si tu instancia **no** tiene `DB_CREATE_FILE_DEST` configurado, deberás habilitarlo antes:
+> ```sql
+> -- Ajusta la ruta al directorio de datos de tu instalación
+> ALTER SYSTEM SET DB_CREATE_FILE_DEST='/opt/oracle/oradata' SCOPE=BOTH;
+> -- Windows: ALTER SYSTEM SET DB_CREATE_FILE_DEST='C:\app\<usuario>\oradata' SCOPE=BOTH;
+> ```
+> Luego ejecuta: `@SQL/03b_tablespaces_reproducciones.sql`
+
+```sql
 @SQL/04_nt2_plsql_quindioflix.sql
 @SQL/05_nt3_transacciones_quindioflix.sql
 @SQL/06_nt4_indices_quindioflix.sql
@@ -301,39 +358,15 @@ Ejecutar los scripts SQL **en orden** usando SQL*Plus o SQL Developer conectado 
 @SQL/07_nt5_usuarios_roles_quindioflix.sql
 ```
 
-### 3. Instalar dependencias Python
-
-```bash
-pip install fastapi uvicorn[standard] oracledb
-```
-
-### 4. Configurar la conexión (opcional)
-
-Si tu base de datos usa credenciales diferentes, configura las variables de entorno:
-
-```bash
-# Windows (PowerShell)
-$env:DB_USER = "tu_usuario"
-$env:DB_PASSWORD = "tu_contraseña"
-$env:DB_DSN = "localhost:1521/tu_servicio"
-```
-
-```bash
-# Linux/macOS
-export DB_USER=tu_usuario
-export DB_PASSWORD=tu_contraseña
-export DB_DSN=localhost:1521/tu_servicio
-```
-
 ### 5. Ejecutar la aplicación
 
-**Opción A** — Usar el script `run.bat` (Windows):
+**Opción A** — Script `run.bat` (Windows):
 
-```bash
+```bat
 run.bat
 ```
 
-**Opción B** — Ejecutar manualmente:
+**Opción B** — Manualmente (cualquier OS):
 
 ```bash
 cd backend
@@ -352,6 +385,7 @@ Navegar a: **[http://localhost:8000](http://localhost:8000)**
 QuindioFlix/
 │
 ├── SQL/                                    # Scripts de base de datos
+│   ├── 00_create_tablespaces_quindioflix.sql # DDL: tablespaces iniciales (USERS/TEMP)
 │   ├── 01_create_tables_quindioflix.sql     # DDL: tablas y restricciones
 │   ├── 02_insert_data_quindioflix.sql       # DML: datos de prueba
 │   ├── 03_nt1_quindioflix.sql              # Vistas materializadas
@@ -365,7 +399,9 @@ QuindioFlix/
 │
 ├── backend/                                # API RESTful
 │   ├── main.py                            # Endpoints FastAPI
-│   └── database.py                        # Conexión Oracle (modo Thin)
+│   ├── database.py                        # Conexión Oracle (modo Thin)
+│   ├── requirements.txt                   # Dependencias Python
+│   └── .env.example                       # Plantilla de configuración (copia como .env)
 │
 ├── frontend/                               # Panel de administración
 │   ├── index.html                         # Estructura HTML5
@@ -373,6 +409,7 @@ QuindioFlix/
 │   └── script.js                          # Lógica de navegación y consumo API
 │
 ├── run.bat                                 # Script de inicio rápido (Windows)
+├── .gitignore                             # Excluye .env y archivos temporales
 └── README.md                              # Este archivo
 ```
 
