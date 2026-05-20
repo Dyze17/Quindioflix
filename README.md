@@ -257,25 +257,19 @@ Panel de administración SPA (Single Page Application) con diseño **glassmorphi
 
 ---
 
-## Requisitos Previos
+## 📦 Requisitos Previos
 
-| Requisito | Versión Mínima |
-|-----------|---------------|
-| [Oracle Database 21c XE](https://www.oracle.com/database/technologies/xe-downloads.html) | 21c Express Edition |
-| [Python](https://www.python.org/downloads/) | 3.10+ |
-| [pip](https://pip.pypa.io/) | Incluido con Python |
+| Requisito | Versión Mínima | Descarga |
+|-----------|---------------|----------|
+| Oracle Database XE | 21c Express Edition | [oracle.com](https://www.oracle.com/database/technologies/xe-downloads.html) |
+| Python | 3.10+ | [python.org](https://www.python.org/downloads/) |
+| pip | Incluido con Python | — |
 
-### Dependencias Python
-
-```
-fastapi
-uvicorn[standard]
-oracledb
-```
+> ⚠️ **Oracle XE es gratuito** pero requiere registro en oracle.com. Al instalarlo en Windows o Linux, el instalador crea automáticamente una PDB llamada **`XEPDB1`** — ésa es la base de datos que usará el proyecto.
 
 ---
 
-## Instalación y Ejecución
+## 🚀 Instalación y Ejecución
 
 ### 1. Clonar el repositorio
 
@@ -290,9 +284,74 @@ cd Quindioflix
 pip install -r backend/requirements.txt
 ```
 
-### 3. Configurar la conexión a Oracle
+### 3. Configurar Oracle desde cero
 
-Copia la plantilla de configuración y edítala con tus credenciales:
+> ℹ️ Si ya tienes Oracle XE instalado con un usuario y una PDB lista, puedes **saltarte al paso 4**.
+
+#### 3a. Verificar que el servicio de Oracle está corriendo
+
+```bash
+# Windows
+lsnrctl status
+
+# Linux
+sudo systemctl status oracle-xe-21c
+```
+
+El listener debe mostrar el servicio **`XEPDB1`** (la PDB por defecto de Oracle XE).
+
+#### 3b. Conectar como administrador (SYSDBA)
+
+Abre SQL*Plus o SQL Developer y conecta con el usuario `SYS`:
+
+```sql
+-- SQL*Plus (línea de comandos)
+sqlplus sys/tu_password_sys@localhost:1521/XEPDB1 AS SYSDBA
+
+-- ¿No recuerdas la contraseña de SYS?
+-- Durante la instalación de Oracle XE se te pidió crearla.
+-- En Windows también puedes usar autenticación del SO:
+sqlplus / AS SYSDBA
+```
+
+> ℹ️ **SQL Developer** es una herramienta gráfica gratuita de Oracle. Descarga en [oracle.com/sqldeveloper](https://www.oracle.com/tools/downloads/sqldev-downloads.html). Para conectar como DBA: **Rol = SYSDBA**, **Servicio = XEPDB1**.
+
+#### 3c. Verificar en qué PDB estás conectado
+
+Una vez dentro de SQL*Plus, ejecuta:
+
+```sql
+SHOW CON_NAME;
+```
+
+Debe aparecer `XEPDB1`. Si aparece `CDB$ROOT`, cambia a la PDB así:
+
+```sql
+ALTER SESSION SET CONTAINER = XEPDB1;
+```
+
+#### 3d. Ejecutar los scripts de inicialización (como SYSDBA)
+
+```sql
+-- Crea los tablespaces USERS y TEMP si no existen
+@SQL/00_create_tablespaces_quindioflix.sql
+
+-- Crea el usuario del esquema principal del proyecto
+-- IMPORTANTE: Abre este archivo primero y edita el nombre
+-- de usuario y contraseña en las variables al inicio del bloque PL/SQL.
+@SQL/00b_create_schema_user.sql
+```
+
+> ⚠️ **Antes de ejecutar `00b`**, abre el archivo y edita estas dos líneas según tus preferencias:
+> ```sql
+> v_username VARCHAR2(30) := 'QUINDIOFLIX_USER';  -- nombre de tu usuario
+> v_password VARCHAR2(50) := 'QuindioFlix2025#';  -- tu contraseña
+> ```
+> El script imprimirá al final exactamente qué valores poner en tu `backend/.env`.
+
+### 4. Configurar la conexión a Oracle (archivo `.env`)
+
+Copia la plantilla de configuración y edítala con las credenciales que elegiste en el paso anterior:
 
 ```bash
 # Linux / macOS
@@ -302,17 +361,17 @@ cp backend/.env.example backend/.env
 copy backend\.env.example backend\.env
 ```
 
-Edita `backend/.env` y ajusta los tres valores:
+Edita `backend/.env`:
 
 ```env
-DB_USER=tu_usuario_oracle
-DB_PASSWORD=tu_contraseña
+DB_USER=QUINDIOFLIX_USER    # el nombre que elegiste en 00b
+DB_PASSWORD=tu_contraseña  # la contraseña que elegiste en 00b
 DB_DSN=localhost:1521/XEPDB1
 ```
 
-> **El archivo `.env` está en `.gitignore`** — nunca se sube al repositorio, así que tus credenciales permanecen privadas.
+> **El archivo `.env` está en `.gitignore`** — nunca se sube al repositorio, tus credenciales permanecen privadas.
 
-**Alternativa**: también puedes exportar las variables directamente en tu terminal sin crear el `.env`:
+**Alternativa**: exportar las variables directamente en la terminal sin crear `.env`:
 
 ```bash
 # Windows (PowerShell)
@@ -322,19 +381,14 @@ $env:DB_USER="tu_usuario"; $env:DB_PASSWORD="tu_clave"; $env:DB_DSN="localhost:1
 export DB_USER=tu_usuario DB_PASSWORD=tu_clave DB_DSN=localhost:1521/XEPDB1
 ```
 
-### 4. Configurar la base de datos Oracle
+### 5. Ejecutar los scripts SQL del proyecto
 
-Ejecutar los scripts SQL **en orden** usando SQL*Plus o SQL Developer conectado como el usuario del esquema (o como DBA donde se indique):
-
-> 🔑 **El Script 00 requiere privilegios DBA**:
-> Conectar como `SYS AS SYSDBA` y ejecutar para asegurar la existencia de los tablespaces del sistema:
-> ```sql
-> @SQL/00_create_tablespaces_quindioflix.sql
-> ```
-
-Luego, puedes conectar con tu usuario de desarrollo del esquema para ejecutar el grueso del proyecto:
+Conecta ahora con el **usuario del esquema** (el que creaste en 00b, no SYS) y ejecuta los scripts en orden:
 
 ```sql
+-- Conectar con el usuario del esquema
+-- sqlplus QUINDIOFLIX_USER/tu_password@localhost:1521/XEPDB1
+
 @SQL/01_create_tables_quindioflix.sql
 @SQL/02_insert_data_quindioflix.sql
 @SQL/03_nt1_quindioflix.sql
@@ -386,6 +440,7 @@ QuindioFlix/
 │
 ├── SQL/                                    # Scripts de base de datos
 │   ├── 00_create_tablespaces_quindioflix.sql # DDL: tablespaces iniciales (USERS/TEMP)
+│   ├── 00b_create_schema_user.sql          # DDL: usuario del esquema principal
 │   ├── 01_create_tables_quindioflix.sql     # DDL: tablas y restricciones
 │   ├── 02_insert_data_quindioflix.sql       # DML: datos de prueba
 │   ├── 03_nt1_quindioflix.sql              # Vistas materializadas
